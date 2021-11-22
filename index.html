@@ -69,25 +69,55 @@
     </form>
 
     <section id="error-btns">
-      <button>Console Log</button>
-      <button>Console Error</button>
-      <button>Console Count</button>
-      <button>Console Warn</button>
-      <button>Console Assert</button>
-      <button>Console Clear</button>
-      <button>Console Dir</button>
-      <button>Console dirxml</button>
-      <button>Console Group Start</button>
-      <button>Console Group End</button>
-      <button>Console Table</button>
-      <button>Start Timer</button>
-      <button>End Timer</button>
-      <button>Console Trace</button>
-      <button>Trigger a Global Error</button>
+      <button id="log-btn">Console Log</button>
+      <button id="error-btn">Console Error</button>
+      <button id="count-btn">Console Count</button>
+      <button id="warn-btn">Console Warn</button>
+      <button id="assert-btn">Console Assert</button>
+      <button id="clear-btn">Console Clear</button>
+      <button id="dir-btn">Console Dir</button>
+      <button id="dirxml-btn">Console dirxml</button>
+      <button id="groupstart-btn">Console Group Start</button>
+      <button id="groupend-btn">Console Group End</button>
+      <button id="table-btn">Console Table</button>
+      <button id="timerstart-btn">Start Timer</button>
+      <button id="timerend-btn">End Timer</button>
+      <button id="trace-btn">Console Trace</button>
+      <button id="globalerror-btn">Trigger a Global Error</button>
     </section>
   </main>
 
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
   <script>
+    window.TrackJS && TrackJS.install({ 
+      token: "a8256187b900417180c461ce4759115f",
+      application: "pancakes"
+    });
+
+    class SnarkyError extends Error {
+      constructor(message) {
+        super(message + "\n\nI bet that error was your fault, huh");
+        const slugMsg = `Error with slug ${Math.floor(Math.random() * 10000)}`;
+        TrackJS.track(slugMsg);
+        console.log(slugMsg);
+        this.name = "SnarkyError";
+      }
+    }
+    const openConnection = () => {
+      // pretend this works
+      console.log('opened connection to server...');
+    };
+
+    const closeConnection = () => {
+      // pretend this works
+      console.log('successfully closed connection to the server');
+      console.log('thank you for not slow lorising the server (:');
+    }
+
+    const brokenAPICall = () => {
+      throw new SnarkyError('mock API call broke and threw this error')
+    };
+
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -101,6 +131,42 @@
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
     // Start your code here
+    const btnFns = {
+      'log-btn': () => console.log('this is a console.log'),
+      'error-btn': () => console.error('this is a console.error'),
+      'count-btn': () => console.count('times count clicked'),
+      'warn-btn': () => console.warn('this is a console.warn'),
+      'assert-btn': () => console.assert(false, {this: true, is: true, a: true, assert: true, scrambled: true}),
+      'clear-btn': () => console.clear(),
+      'table-btn': () => console.table(['this', 'is', 'a', 'console.table']),
+      'dir-btn': () => console.dir({this: true, is: true, a: true, console: true, dir: true, scrambled: true}),
+      'dirxml-btn': () => console.dirxml(document),
+      'groupstart-btn': () => console.group(),
+      'groupend-btn': () => console.groupEnd(),
+      'timerstart-btn': () => {
+            console.time('timer-label-1');
+            console.log('timer started');
+          },
+      'timerend-btn': () => console.timeEnd('timer-label-1'),
+      'trace-btn': () => (() => (() => console.trace())())(), // ...gross
+      'globalerror-btn': () => {
+        const errMsg = `Global error with slug ${Math.floor(Math.random() * 10000)} detected`;
+        console.log(errMsg);
+        TrackJS.track(errMsg);
+      }
+    }
+    for (let btn of errorBtns) {
+      btn.onclick = btnFns[btn.id];
+    }
+
+    try {
+      openConnection();
+      brokenAPICall();
+    } catch(e) {
+      console.log(`ran into error while making API call to server: ${e}`);
+    } finally {
+      closeConnection();
+    }
     // You may move this JS to another file if you wish
   </script>
 </body>
